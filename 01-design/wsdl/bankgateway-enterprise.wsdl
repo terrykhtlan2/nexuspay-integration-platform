@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wsdl:definitions 
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:tns="http://nexuspay.com/bank/v1"
+    xmlns:sch="http://nexuspay.com/bank/v1/schemas"
+    targetNamespace="http://nexuspay.com/bank/v1"
+    name="BankGatewayService">
+
+    <wsdl:documentation>
+        NexusPay Bank Gateway SOAP Service
+        Version: 1.0.0
+        Last Updated: 2026-03-05
+        SLA: 99.95% uptime, <500ms response time
+    </wsdl:documentation>
+
+    <wsdl:types>
+        <xs:schema>
+            <xs:import namespace="http://nexuspay.com/bank/v1/schemas" 
+                       schemaLocation="schemas/bankgateway-v1.xsd"/>
+        </xs:schema>
+    </wsdl:types>
+
+    <wsdl:message name="SubmitAuthorisationRequest">
+        <wsdl:part name="parameters" element="sch:SubmitAuthorisationRequest"/>
+    </wsdl:message>
+    
+    <wsdl:message name="SubmitAuthorisationResponse">
+        <wsdl:part name="parameters" element="sch:SubmitAuthorisationResponse"/>
+    </wsdl:message>
+
+    <wsdl:portType name="BankGatewayPortType">
+        <wsdl:operation name="SubmitAuthorisation">
+            <wsdl:input message="tns:SubmitAuthorisationRequest"/>
+            <wsdl:output message="tns:SubmitAuthorisationResponse"/>
+        </wsdl:operation>
+    </wsdl:portType>
+
+    <wsdl:binding name="BankGatewayBinding" type="tns:BankGatewayPortType">
+        <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+        <wsdl:operation name="SubmitAuthorisation">
+            <soap:operation soapAction="urn:SubmitAuthorisation"/>
+            <wsdl:input><soap:body use="literal"/></wsdl:input>
+            <wsdl:output><soap:body use="literal"/></wsdl:output>
+        </wsdl:operation>
+    </wsdl:binding>
+
+    <wsdl:service name="BankGatewayService">
+        <wsdl:port name="BankGatewayPort" binding="tns:BankGatewayBinding">
+            <soap:address location="http://localhost:18088/bank-gateway/v1"/>
+        </wsdl:port>
+    </wsdl:service>
+</wsdl:definitions>
