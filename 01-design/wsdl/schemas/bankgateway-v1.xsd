@@ -1,110 +1,69 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
-    targetNamespace="http://nexuspay.com/bankgateway/v1"
-    xmlns:ns="http://nexuspay.com/bankgateway/v1"
-    elementFormDefault="qualified">
+<xs:schema
+  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  targetNamespace="http://nexuspay.com/bankgateway/v1"
+  xmlns:ns="http://nexuspay.com/bankgateway/v1"
+  elementFormDefault="qualified"
+  attributeFormDefault="unqualified">
 
-    <!-- Correlation Header for Request Tracking -->
-    <xs:complexType name="CorrelationHeader">
-        <xs:sequence>
-            <xs:element name="correlationId" type="xs:string">
-                <xs:annotation>
-                    <xs:documentation>Unique identifier for request tracking across systems</xs:documentation>
-                </xs:annotation>
-            </xs:element>
-            <xs:element name="timestamp" type="xs:dateTime">
-                <xs:annotation>
-                    <xs:documentation>ISO 8601 timestamp of request</xs:documentation>
-                </xs:annotation>
-            </xs:element>
-            <xs:element name="sourceSystem" type="xs:string" minOccurs="0"/>
-        </xs:sequence>
-    </xs:complexType>
+  <!-- =========================
+       Shared / Header Types
+       ========================= -->
 
-    <!-- Payment Card Details -->
-    <xs:complexType name="CardDetails">
-        <xs:sequence>
-            <xs:element name="cardNumber" type="xs:string">
-                <xs:annotation>
-                    <xs:documentation>PAN - Primary Account Number</xs:documentation>
-                </xs:annotation>
-            </xs:element>
-            <xs:element name="expiryMonth" type="xs:int">
-                <xs:annotation>
-                    <xs:documentation>MM format</xs:documentation>
-                </xs:annotation>
-            </xs:element>
-            <xs:element name="expiryYear" type="xs:int">
-                <xs:annotation>
-                    <xs:documentation>YYYY format</xs:documentation>
-                </xs:annotation>
-            </xs:element>
-            <xs:element name="cvv" type="xs:string" minOccurs="0"/>
-            <xs:element name="cardHolderName" type="xs:string"/>
-        </xs:sequence>
-    </xs:complexType>
+  <xs:complexType name="CorrelationHeader">
+    <xs:sequence>
+      <xs:element name="correlationId" type="xs:string"/>
+      <xs:element name="timestamp" type="xs:dateTime"/>
+    </xs:sequence>
+  </xs:complexType>
 
-    <!-- Amount with Currency -->
-    <xs:complexType name="Amount">
-        <xs:sequence>
-            <xs:element name="value" type="xs:decimal">
-                <xs:annotation>
-                    <xs:documentation>Amount with up to 2 decimal places</xs:documentation>
-                </xs:annotation>
-            </xs:element>
-            <xs:element name="currency" type="xs:string">
-                <xs:annotation>
-                    <xs:documentation>ISO 4217 currency code (e.g., AUD, USD)</xs:documentation>
-                </xs:annotation>
-            </xs:element>
-        </xs:sequence>
-    </xs:complexType>
+  <!-- =========================
+       Request / Response Types
+       ========================= -->
 
-    <!-- Authorise Payment Request -->
-    <xs:element name="AuthorisePaymentRequest">
-        <xs:complexType>
-            <xs:sequence>
-                <xs:element name="correlationHeader" type="ns:CorrelationHeader"/>
-                <xs:element name="merchantId" type="xs:string"/>
-                <xs:element name="terminalId" type="xs:string" minOccurs="0"/>
-                <xs:element name="cardDetails" type="ns:CardDetails"/>
-                <xs:element name="amount" type="ns:Amount"/>
-                <xs:element name="idempotencyKey" type="xs:string" minOccurs="0"/>
-            </xs:sequence>
-        </xs:complexType>
-    </xs:element>
+  <xs:simpleType name="DecisionType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="APPROVED"/>
+      <xs:enumeration value="DECLINED"/>
+    </xs:restriction>
+  </xs:simpleType>
 
-    <!-- Authorise Payment Response -->
-    <xs:element name="AuthorisePaymentResponse">
-        <xs:complexType>
-            <xs:sequence>
-                <xs:element name="correlationHeader" type="ns:CorrelationHeader"/>
-                <xs:element name="transactionId" type="xs:string"/>
-                <xs:element name="authorisationCode" type="xs:string"/>
-                <xs:element name="status" type="xs:string">
-                    <xs:annotation>
-                        <xs:documentation>APPROVED, DECLINED, PENDING</xs:documentation>
-                    </xs:annotation>
-                </xs:element>
-                <xs:element name="amount" type="ns:Amount"/>
-                <xs:element name="responseCode" type="xs:string"/>
-                <xs:element name="responseMessage" type="xs:string" minOccurs="0"/>
-                <xs:element name="settlementDate" type="xs:date" minOccurs="0"/>
-            </xs:sequence>
-        </xs:complexType>
-    </xs:element>
+  <xs:complexType name="AuthorisePaymentRequest">
+    <xs:sequence>
+      <xs:element name="header" type="ns:CorrelationHeader"/>
+      <xs:element name="merchantId" type="xs:string"/>
+      <xs:element name="amount" type="xs:decimal"/>
+      <xs:element name="currency" type="xs:string"/>
+      <xs:element name="paymentReference" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
 
-    <!-- Fault Structure for Errors -->
-    <xs:complexType name="BankGatewayFault">
-        <xs:sequence>
-            <xs:element name="correlationId" type="xs:string"/>
-            <xs:element name="faultCode" type="xs:string"/>
-            <xs:element name="faultMessage" type="xs:string"/>
-            <xs:element name="faultDetail" type="xs:string" minOccurs="0"/>
-            <xs:element name="timestamp" type="xs:dateTime"/>
-        </xs:sequence>
-    </xs:complexType>
+  <xs:complexType name="AuthorisePaymentResponse">
+    <xs:sequence>
+      <xs:element name="header" type="ns:CorrelationHeader"/>
+      <xs:element name="decision" type="ns:DecisionType"/>
+      <xs:element name="authCode" type="xs:string" minOccurs="0"/>
+      <xs:element name="declineReason" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
 
-    <xs:element name="BankGatewayFault" type="ns:BankGatewayFault"/>
+  <!-- =========================
+       Fault Types
+       ========================= -->
+
+  <xs:complexType name="BankGatewayFault">
+    <xs:sequence>
+      <xs:element name="faultCode" type="xs:string"/>
+      <xs:element name="faultMessage" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- =========================
+       Global Elements
+       ========================= -->
+
+  <xs:element name="AuthorisePaymentRequest" type="ns:AuthorisePaymentRequest"/>
+  <xs:element name="AuthorisePaymentResponse" type="ns:AuthorisePaymentResponse"/>
+  <xs:element name="BankGatewayFault" type="ns:BankGatewayFault"/>
 
 </xs:schema>
