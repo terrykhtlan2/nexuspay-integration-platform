@@ -1,0 +1,128 @@
+openapi: 3.0.3
+info:
+  title: NexusPay Payments API
+  version: 1.0.0
+  description: REST facade for NexusPay payment authorisation over SOAP BankGateway.
+
+servers:
+  - url: http://localhost:8081
+    description: Local REST facade simulation
+
+paths:
+  /payments/authorisations:
+    post:
+      summary: Authorise a payment
+      operationId: authorisePayment
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: header
+          name: X-Correlation-Id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthorisePaymentRequest'
+            examples:
+              success:
+                value:
+                  merchantId: MERCHANT_OK
+                  amount: 500
+                  currency: USD
+                  paymentReference: INV-001
+      responses:
+        '200':
+          description: Payment authorised
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthorisePaymentResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '402':
+          description: Payment declined
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthorisePaymentResponse'
+        '413':
+          description: Payload too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: Upstream SOAP fault
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+
+    AuthorisePaymentRequest:
+      type: object
+      required:
+        - merchantId
+        - amount
+        - currency
+      properties:
+        merchantId:
+          type: string
+        amount:
+          type: number
+          format: double
+        currency:
+          type: string
+        paymentReference:
+          type: string
+
+    AuthorisePaymentResponse:
+      type: object
+      properties:
+        correlationId:
+          type: string
+        status:
+          type: string
+          enum:
+            - APPROVED
+            - DECLINED
+        responseCode:
+          type: string
+        responseMessage:
+          type: string
+        authCode:
+          type: string
+          nullable: true
+
+    ErrorResponse:
+      type: object
+      properties:
+        correlationId:
+          type: string
+        errorCode:
+          type: string
+        errorMessage:
+          type: string
